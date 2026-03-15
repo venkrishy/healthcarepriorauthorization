@@ -1,0 +1,47 @@
+# AgentCore CLI configuration
+# Usage: agentcore launch --config .bedrock_agentcore.yaml
+
+version: "1.0"
+
+agent:
+  name: authagent
+  description: "Healthcare prior authorization multi-agent system"
+
+runtime:
+  # arm64 Linux — matches Lambda architecture for consistency
+  architecture: arm64
+  python_version: "3.13"
+
+  # OTEL auto-instrumentation wraps the entry point
+  # Strands emits agent turn spans; custom spans in tools add guideline IDs
+  entry_point:
+    - opentelemetry-instrument
+    - python
+    - main.py
+
+  session:
+    idle_timeout_seconds: 300
+    max_lifetime_seconds: 1800
+
+  environment:
+    # These are overridden at deploy time via scripts/deploy_agentcore.py
+    BEDROCK_MODEL_ID: "anthropic.claude-3-haiku-20240307-v1:0"
+    AWS_REGION: "us-east-1"
+    KNOWLEDGE_BASE_ID: ""          # set after cdk deploy AuthAgentData
+    DECISIONS_TABLE: "authagent-decisions"
+    AUDIT_TABLE: "authagent-audit"
+    RATE_LIMITS_TABLE: "authagent-rate-limits"
+    DAILY_REQUEST_LIMIT: "100"
+    MONTHLY_REQUEST_LIMIT: "3100"
+    OTEL_SERVICE_NAME: "authagent"
+    OTEL_EXPORTER_OTLP_ENDPOINT: ""  # CloudWatch OTLP endpoint set by AgentCore
+
+observability:
+  # AgentCore Observability — CloudWatch Transaction Search
+  enabled: true
+  # Trace attributes written by authagent (no PHI):
+  #   request.id, agent.name, guideline.id, decision.necessity_score, decision.outcome
+
+deployment:
+  s3_bucket: ""  # set to authagent-agentcore-deploy-<account-id>
+  role_arn: ""   # set to authagent-agentcore-role ARN from AgentCoreStack

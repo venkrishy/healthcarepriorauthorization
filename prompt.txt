@@ -1,0 +1,114 @@
+Build a comprehensive healthcare prior authorization system with multiple AI agents working together. This would be a production-ready multi-agent application called "authagent" using AutoGen (pyautogen / autogen-agentchat) deployed on Azure Container Apps.
+
+## Use Case
+This is a healthcare prior authorization system where multiple AI agents collaborate in a conversational loop to evaluate a prior auth request: retrieve relevant clinical guidelines, assess medical necessity, and route to approve, pend for more info, or deny with documented rationale. This mirrors real-world payer workflows and demonstrates agentic decision-making with audit trails.
+
+Multi-agent architecture: Orchestrator agent coordinates 3 specialists (Clinical, Policy, Documentation agents) using tool-based delegation
+4 main pages: Landing page, multi-step submission form, admin dashboard with filters, request detail with live agent conversation
+AI SDK 6 patterns: Uses streamText with stopWhen, tool-based agent communication, streaming UI with useChat
+Full audit trail: Every agent action logged with reasoning, visualized in timeline component
+In-memory data: Mock ICD-10/CPT codes, clinical guidelines, payer policies (no database required)
+Decision routing: Approve, Pend for more info (Hold for more info), or Deny with documented rationale from all agents
+
+Real-World Features
+✓ Input Collection - Captures patient demographics, diagnosis codes, requested procedures, clinical history, previous treatments, and provider specialty
+✓ Agentic Decision Loop - Each agent builds on the previous one's analysis, creating a true collaborative workflow
+✓ Three-Tier Outcomes - Approve, Pend for Info, or Deny with detailed rationale
+✓ Audit Trail - Complete documentation for compliance, quality assurance, and potential appeals
+✓ Interactive Chat - Appeals and clarifications widget for follow-up questions
+
+This mirrors real payer workflows with systematic evaluation, evidence-based criteria, and regulatory compliance. Ready to test with a case!
+
+## Tech Stack
+  - Framework: AutoGen (autogen-agentchat, Python)
+  - LLM: Azure OpenAI (gpt-4o)
+  - Clinical guidelines corpus: Azure AI Search (RAG, text-embedding-3-large)
+  - Audit trail persistence: Azure Cosmos DB
+  - API layer: FastAPI
+  - Deployment: Azure Container Apps
+  - IaC: Bicep
+  - CI/CD: GitHub Actions
+  - Observability: Azure Monitor + Application Insights
+
+  ## AutoGen Architecture
+  Build a group chat with these agents coordinated by a GroupChatManager:
+
+  1. **ClinicalGuidelinesAgent** (`AssistantAgent`)
+     - Registered tool: `search_guidelines(query: str) -> str` — queries Azure
+       AI Search for relevant clinical coverage criteria, LCD/NCD policies
+     - Responsibility: retrieve and summarize applicable clinical guidelines for
+       the requested procedure code and diagnosis
+
+  2. **MedicalNecessityAgent** (`AssistantAgent`)
+     - Registered tool: `evaluate_necessity(clinical_info: dict) -> dict` —
+       structured LLM evaluation returning necessity_score (0-100), supporting
+       rationale, missing information gaps
+     - Responsibility: evaluate whether the submitted clinical information meets
+       necessity criteria; flag missing documentation
+
+  3. **AuthorizationRouterAgent** (`AssistantAgent`)
+     - Registered tool: `write_decision(decision: dict) -> str` — persists
+       structured decision to Cosmos DB with full audit trail
+     - Routing logic:
+       - necessity_score >= 75 AND no missing info → APPROVED
+       - necessity_score >= 75 AND missing info → PEND (request additional info)
+       - necessity_score < 75 → DENIED with documented criteria failure
+     - Produces a structured decision letter
+
+  4. **OrchestratorAgent** (`UserProxyAgent` with human_input_mode="NEVER")
+     - Drives the conversation, passes the prior auth request to the group chat,
+       collects final structured output
+
+  Use AutoGen's `register_function` pattern for all tools (not deprecated
+  function_map). Use `GroupChat` with `max_round=10` and a custom
+  `speaker_selection_method` that enforces the correct agent sequence.
+
+  ## Prior Auth Request Schema (Pydantic input)
+  - patient_id: str
+  - procedure_code: str (CPT code)
+  - diagnosis_codes: List[str] (ICD-10)
+  - clinical_notes: str
+  - requesting_provider: str
+  - insurance_plan: str
+
+  ## Decision Output Schema (Pydantic, persisted to Cosmos DB)
+  - request_id: str
+  - decision: Literal["APPROVED", "PENDED", "DENIED"]
+  - necessity_score: int
+  - guidelines_cited: List[str]
+  - rationale: str
+  - missing_information: List[str] (if PENDED)
+  - denial_reason: str (if DENIED)
+  - audit_trail: List[AgentMessage] (full conversation history)
+  - metadata: { duration_ms, total_tokens, cost_usd, timestamp }
+
+  ## API Endpoints
+  - POST /authorize — submit prior auth request, return request_id
+  - GET /status/{request_id} — check processing status
+  - GET /decision/{request_id} — retrieve final decision with audit trail
+  - GET /audit/{request_id} — full agent conversation history for compliance
+
+  ## HIPAA-Aligned Guardrails
+  - No real PHI in logs — mask patient_id in all telemetry
+  - All data at rest in Cosmos DB encrypted (Azure managed keys)
+  - Log only metadata (token counts, decision, duration) to Application Insights
+  - Include a `guardrails.py` module that scrubs PII from agent messages before
+    logging
+
+  ## Observability
+  Emit structured telemetry per agent turn:
+  { agent_name, round, duration_ms, input_tokens, output_tokens, timestamp }
+  Wire to Application Insights. Include a /metrics endpoint with:
+  avg approval rate, avg processing time, avg cost per decision.
+
+  ## Deployment
+  - Multi-stage Dockerfile
+  - Bicep templates: Container Apps, Azure OpenAI, AI Search, Cosmos DB, Log
+    Analytics, Application Insights
+  - GitHub Actions: build → push ACR → deploy Container Apps
+
+  ## README
+  Architecture diagram, setup guide, sample curl flows, and a synthetic test
+  case demonstrating all three decision paths (approve / pend / deny).
+
+  Production-quality, fully typed, no notebooks. HIPAA-conscious throughout.

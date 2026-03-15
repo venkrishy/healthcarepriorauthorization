@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "authagent"
+version = "1.0.0"
+description = "AWS-native healthcare prior authorization system using Strands Agents + Bedrock AgentCore"
+requires-python = ">=3.13"
+dependencies = [
+    "strands-agents>=0.1.0",
+    "strands-agents-tools>=0.1.0",
+    "fastapi>=0.115.0",
+    "mangum>=0.19.0",
+    "boto3>=1.38.0",
+    "opentelemetry-api>=1.30.0",
+    "opentelemetry-sdk>=1.30.0",
+    "opentelemetry-instrumentation>=0.51b0",
+    "opentelemetry-instrumentation-fastapi>=0.51b0",
+    "opentelemetry-instrumentation-botocore>=0.51b0",
+    "pydantic>=2.10.0",
+    "uvicorn[standard]>=0.32.0",
+]
+
+[project.optional-dependencies]
+infra = [
+    "aws-cdk-lib>=2.170.0",
+    "constructs>=10.4.0",
+    "aws-cdk.aws-lambda-python-alpha>=2.170.0a0",
+]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0.0",
+    "moto[dynamodb,s3]>=5.0.0",
+    "httpx>=0.28.0",
+    "ruff>=0.8.0",
+]
+
+[tool.setuptools.package-dir]
+"authagent" = "."
+
+[tool.setuptools.packages.find]
+where = [".."]
+include = ["authagent*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "--cov=authagent --cov-report=term-missing"
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+ignore = ["E501"]
