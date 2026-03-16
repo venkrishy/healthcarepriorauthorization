@@ -1,14 +1,32 @@
 # AuthAgent — AWS-Native Healthcare Prior Authorization System
 
-Multi-agent prior authorization system built on **AWS Strands Agents SDK** +
-**Amazon Bedrock AgentCore** + **Claude 3 Haiku**.
+This solution has multiple AI agents running in AWS.  RAG is performed using AWS Bedrock Knowledge Bases.
+
+It is a Multi-agent prior authorization system built on **AWS Strands Agents SDK** +
+**Amazon Bedrock AgentCore** and uses **Claude Haiku Model**
+
+It uses the Strands Sequential pipeline.
+
+The agents are:
+(1) OrchestratorAgent
+(2) ClinicalGuidelinesAgent 
+(3) MedicalNecessityAgent
+(4) AuthorizationRouterAgent
+
+Output will the final score.
+
+The frontend for this can be seen at [Authorization Agent (theaiguru.dev) ](https://auth-agent.theaiguru.dev/).  
+Built by [Venky Krishnaswamy](https://theaiguru.dev)
+
+## Related to:
+This is similar to the AI Agents `riskscout` and `crewmarketintelligence`: both are production-ready agentic systems and both are deployed on Azure Container Apps, they share FastAPI + telemetry best practices, and demonstrate multi-agent orchestration, observability, and deployment automation.
 
 ## Architecture
 
 ```
 POST /authorize
        |
-  API Gateway (Usage Plan: 100/day, 3,100/month)
+  API Gateway (Expected Usage Plan: 100/day, 3,100/month)
        |
   Lambda (Mangum + FastAPI)
        |
@@ -35,18 +53,6 @@ POST /authorize
 - `score >= 75` AND no missing info → `APPROVED`
 - `score >= 75` AND missing info → `PENDED`
 - `score < 75` → `DENIED`
-
-## Cost Profile
-
-~$20-25/month at full 3,100 request/month cap (Claude 3 Haiku).
-100% serverless / scale-to-zero — no idle infrastructure cost.
-
-| Service | Monthly Cost |
-|---------|-------------|
-| Bedrock Claude 3 Haiku | ~$17 |
-| AgentCore Runtime | ~$2-5 |
-| DynamoDB + KB + S3 | < $2 |
-| Lambda + API Gateway | ~$0 |
 
 ## Setup
 
