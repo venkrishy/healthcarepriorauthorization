@@ -16,10 +16,11 @@ The agents are:
 Output will the final score.
 
 The frontend for this can be seen at [Authorization Agent (theaiguru.dev) ](https://auth-agent.theaiguru.dev/).  
-Built by [Venky Krishnaswamy](https://theaiguru.dev)
+
+Built by [Venky Krishnaswamy](https://www.linkedin.com/in/venky-krishnaswamy-16626a6/)
 
 ## Related to:
-This is similar to the AI Agents `riskscout` and `crewmarketintelligence`: both are production-ready agentic systems and both are deployed on Azure Container Apps, they share FastAPI + telemetry best practices, and demonstrate multi-agent orchestration, observability, and deployment automation.
+This is similar to the AI Agents `riskscout` and `crewmarketintelligence`: both are production-ready agentic systems.  While this one is deployed on AWS, the other two AI agentic solutions are deployed on Azure Container Apps.  All of them demonstrate multi-agent orchestration, observability, and deployment automation.
 
 ## Architecture
 
