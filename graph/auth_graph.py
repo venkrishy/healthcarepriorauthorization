@@ -182,7 +182,7 @@ class AuthGraph:
         match = re.search(r'"necessity_score"\s*:\s*(\d+)', text)
         if match:
             return int(match.group(1))
-        match = re.search(r'necessity_score[:\s]+(\d+)', text, re.IGNORECASE)
+        match = re.search(r'necessity[_ ]score[:\s]+(\d+)', text, re.IGNORECASE)
         if match:
             return int(match.group(1))
         return None

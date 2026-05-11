@@ -46,7 +46,6 @@ api_stack = ApiStack(
     audit_table=data_stack.audit_table,
     rate_limits_table=data_stack.rate_limits_table,
     guidelines_bucket=data_stack.guidelines_bucket,
-    # Knowledge Base ID set after scripts/setup_knowledge_base.py runs
     knowledge_base_id=os.environ.get("KNOWLEDGE_BASE_ID", "PLACEHOLDER"),
     agentcore_runtime_arn=os.environ.get("AGENTCORE_RUNTIME_ARN", ""),
     env=env,

@@ -9,9 +9,8 @@ Tables (PAY_PER_REQUEST — zero cost at zero traffic):
 S3:
   authagent-guidelines-<account> — LCD/NCD PDFs for Knowledge Base ingestion
 
-Bedrock Knowledge Base is created separately via scripts/setup_knowledge_base.py
-after CDK deployment, because it requires AOSS collection setup that is easier
-to configure via the AWS CLI / console than CloudFormation.
+Bedrock Knowledge Base must be set up manually after CDK deployment via the AWS
+console or CLI. Set the KNOWLEDGE_BASE_ID environment variable on the Lambda once created.
 """
 
 import aws_cdk as cdk
@@ -93,5 +92,5 @@ class DataStack(cdk.Stack):
         cdk.CfnOutput(
             self,
             "NextStep",
-            value="Run: python scripts/setup_knowledge_base.py to create the Bedrock Knowledge Base",
+            value="Create the Bedrock Knowledge Base manually via the AWS console/CLI, then set KNOWLEDGE_BASE_ID on the Lambda.",
         )
